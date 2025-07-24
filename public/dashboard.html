@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin - Orders Dashboard</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background: #f0f0f0; }
+    h1 { text-align: center; color: #2c7a7b; }
+    table { width: 95%; margin: 20px auto; border-collapse: collapse; background: white; box-shadow: 0 1px 6px rgba(0,0,0,0.1); }
+    th, td { padding: 12px; border: 1px solid #ddd; text-align: center; }
+    th { background: #2c7a7b; color: white; }
+    .status-success { background: #c6f6d5; color: #22543d; padding: 5px 10px; border-radius: 4px; }
+    .status-pending { background: #fed7d7; color: #742a2a; padding: 5px 10px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+
+  <h1>Orodha ya Orders Zilizowekwa</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>Jina la Mteja</th>
+        <th>Simu</th>
+        <th>Bidhaa</th>
+        <th>Bei</th>
+        <th>Muda</th>
+        <th>Status ya Malipo</th>
+        <th>Transaction ID</th>
+      </tr>
+    </thead>
+    <tbody id="ordersTableBody"></tbody>
+  </table>
+
+  <script>
+    async function loadOrders() {
+      const res = await fetch('/api/admin/orders');
+      const orders = await res.json();
+      const tableBody = document.getElementById('ordersTableBody');
+      tableBody.innerHTML = '';
+
+      orders.forEach(order => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${order.customerName}</td>
+          <td>${order.phone}</td>
+          <td>${order.productName}</td>
+          <td>TZS ${order.amount.toLocaleString()}</td>
+          <td>${new Date(order.createdAt).toLocaleString()}</td>
+          <td>
+            <span class="${order.paymentStatus === 'success' ? 'status-success' : 'status-pending'}">
+              ${order.paymentStatus.toUpperCase()}
+            </span>
+          </td>
+          <td>${order.transactionId || '-'}</td>
+        `;
+        tableBody.appendChild(tr);
+      });
+    }
+
+    loadOrders();
+  </script>
+
+</body>
+</html>

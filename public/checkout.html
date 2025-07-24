@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Malipo ya Viatu vya Watoto</title>
+<style>
+  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
+  h2 { text-align: center; color: #2c7a7b; }
+  form { max-width: 400px; margin: 30px auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  input, button { width: 100%; padding: 10px; margin: 10px 0; font-size: 16px; border-radius: 5px; border: 1px solid #ccc; }
+  button { background: #2c7a7b; color: white; border: none; cursor: pointer; }
+  button:hover { background: #276a6a; }
+  .price-display { font-size: 18px; font-weight: bold; text-align: center; margin-bottom: 15px; color: #2c7a7b; }
+  .error { color: red; font-size: 14px; margin-top: 10px; text-align: center; }
+</style>
+</head>
+<body>
+
+<h2>Malipo ya Kiatu</h2>
+<div class="price-display" id="priceDisplay">Kiasi: TZS ...</div>
+
+<form id="orderForm">
+  <input type="text" id="customerName" placeholder="Jina lako kamili" required />
+  <input type="tel" id="phone" placeholder="Namba ya simu (e.g. 07XXXXXXXX)" pattern="07[0-9]{8}" required />
+  <input type="hidden" id="productId" />
+  <button type="submit">Lipa kwa Airtel LIPA</button>
+  <div class="error" id="errorMsg"></div>
+</form>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const productId = params.get('productId');
+  if (!productId) {
+    alert('Bidhaa haijapatikana. Rudi kwenye ukurasa wa bidhaa.');
+    window.location.href = '/';
+  }
+
+  document.getElementById('productId').value = productId;
+
+  async function loadProductPrice() {
+    try {
+      const res = await fetch(`/api/products`);
+      const products = await res.json();
+      const product = products.find(p => p._id === productId);
+      if (!product) throw new Error('Bidhaa haipo.');
+
+      document.getElementById('priceDisplay').textContent = `Kiasi: TZS ${product.price.toLocaleString()}`;
+    } catch (e) {
+      alert('Tatizo kupakia bidhaa.');
+      window.location.href = '/';
+    }
+  }
+  loadProductPrice();
+
+  document.getElementById('orderForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const customerName = document.getElementById('customerName').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+
+    if (!customerName || !phone) {
+      document.getElementById('errorMsg').textContent = 'Tafadhali jaza majina na namba ya simu.';
+      return;
+    }
+
+    const res = await fetch('/api/order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ customerName, phone, productId }),
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      alert('Tuma malipo yako kwa Airtel LIPA namba yetu. Ukimaliza, utapokea uthibitisho.');
+      window.location.href = '/success.html';
+    } else {
+      document.getElementById('errorMsg').textContent = data.error || 'Tatizo limejitokeza.';
+    }
+  });
+</script>
+
+</body>
+</html>

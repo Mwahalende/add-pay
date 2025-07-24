@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin - Usimamizi wa Bidhaa</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 20px;
+      background: #f9f9f9;
+    }
+    h1 {
+      color: #2c7a7b;
+      text-align: center;
+    }
+    form {
+      max-width: 600px;
+      margin: 20px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+    }
+    input, textarea, button {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+    button {
+      background: #2c7a7b;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #276a6a;
+    }
+    table {
+      width: 90%;
+      margin: 30px auto;
+      border-collapse: collapse;
+      background: white;
+      box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+    }
+    th, td {
+      padding: 12px;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+    img {
+      width: 100px;
+      height: 80px;
+      object-fit: contain;
+    }
+    .btn-delete {
+      background: #e53e3e;
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .btn-delete:hover {
+      background: #9b2c2c;
+    }
+    .btn-edit {
+      background: #3182ce;
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      cursor: pointer;
+      border-radius: 4px;
+      margin-right: 5px;
+    }
+    .btn-edit:hover {
+      background: #2b6cb0;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Admin Dashboard - Bidhaa</h1>
+
+<form id="productForm" enctype="multipart/form-data">
+  <input type="hidden" id="productId" />
+  <input type="text" id="name" placeholder="Jina la Bidhaa" required />
+  <textarea id="description" placeholder="Maelezo" rows="3" required></textarea>
+  <input type="number" id="price" placeholder="Bei (TZS)" required min="0" />
+  <input type="file" id="image" accept="image/*" />
+  <button type="submit">Ongeza / Hariri Bidhaa</button>
+</form>
+
+<table>
+  <thead>
+    <tr>
+      <th>Picha</th>
+      <th>Jina</th>
+      <th>Maelezo</th>
+      <th>Bei</th>
+      <th>Vitendo</th>
+    </tr>
+  </thead>
+  <tbody id="productsTableBody"></tbody>
+</table>
+
+<script>
+  const productForm = document.getElementById('productForm');
+  const productsTableBody = document.getElementById('productsTableBody');
+
+  async function loadProducts() {
+    const res = await fetch('/api/products');
+    const products = await res.json();
+
+    productsTableBody.innerHTML = '';
+    products.forEach(p => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><img src="${p.imageUrl}" alt="${p.name}" /></td>
+        <td>${p.name}</td>
+        <td>${p.description}</td>
+        <td>TZS ${p.price.toLocaleString()}</td>
+        <td>
+          <button class="btn-edit" onclick="editProduct('${p._id}')">Hariri</button>
+          <button class="btn-delete" onclick="deleteProduct('${p._id}')">Futa</button>
+        </td>
+      `;
+      productsTableBody.appendChild(tr);
+    });
+  }
+
+  async function deleteProduct(id) {
+    if (!confirm('Una hakika unataka kufuta bidhaa hii?')) return;
+    await fetch(`/api/products/${id}`, { method: 'DELETE' });
+    loadProducts();
+  }
+
+  async function editProduct(id) {
+    const res = await fetch(`/api/products`);
+    const products = await res.json();
+    const product = products.find(p => p._id === id);
+    if (!product) return;
+
+    document.getElementById('productId').value = product._id;
+    document.getElementById('name').value = product.name;
+    document.getElementById('description').value = product.description;
+    document.getElementById('price').value = product.price;
+  }
+
+  productForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const formData = new FormData(productForm);
+    const id = document.getElementById('productId').value;
+    const method = id ? 'PUT' : 'POST';
+    const url = id ? `/api/products/${id}` : '/api/products';
+
+    const res = await fetch(url, {
+      method,
+      body: formData
+    });
+
+    if (res.ok) {
+      productForm.reset();
+      document.getElementById('productId').value = '';
+      loadProducts();
+    } else {
+      alert('Tatizo limejitokeza. Tafadhali jaribu tena.');
+    }
+  });
+
+  loadProducts();
+</script>
+
+</body>
+</html>

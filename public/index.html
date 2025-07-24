@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Duka la Viatu vya Watoto</title>
+<style>
+  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+  h1 { text-align: center; color: #333; }
+  .product-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; }
+  .product { background: #fff; padding: 15px; border-radius: 8px; width: 220px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-align: center; }
+  .product img { width: 200px; height: 150px; object-fit: contain; }
+  .product h3 { margin: 10px 0 5px; color: #444; }
+  .product p { font-size: 14px; color: #666; height: 40px; overflow: hidden; }
+  .price { font-weight: bold; color: #2c7a7b; margin: 10px 0; }
+  .buy-btn { background: #2c7a7b; color: #fff; border: none; padding: 10px; border-radius: 5px; cursor: pointer; width: 100%; font-size: 16px; }
+  .buy-btn:hover { background: #276a6a; }
+</style>
+</head>
+<body>
+
+<h1>Karibu Duka la Viatu vya Watoto</h1>
+<div class="product-list" id="productList">
+  <!-- Products will be loaded here -->
+</div>
+
+<script>
+  async function loadProducts() {
+    const res = await fetch('/api/products');
+    const products = await res.json();
+    const container = document.getElementById('productList');
+    container.innerHTML = '';
+    products.forEach(p => {
+      const div = document.createElement('div');
+      div.className = 'product';
+      div.innerHTML = `
+        <img src="${p.imageUrl}" alt="${p.name}" />
+        <h3>${p.name}</h3>
+        <p>${p.description}</p>
+        <div class="price">TZS ${p.price.toLocaleString()}</div>
+        <button class="buy-btn" onclick="goToCheckout('${p._id}')">Nunua</button>
+      `;
+      container.appendChild(div);
+    });
+  }
+
+  function goToCheckout(productId) {
+    window.location.href = `/checkout.html?productId=${productId}`;
+  }
+
+  loadProducts();
+</script>
+
+</body>
+</html>
